@@ -1,0 +1,163 @@
+{
+  "name": "Sentiment Analysis Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        -20
+      ],
+      "id": "f6d3efc6-a25b-4fbe-97a7-5f67011c6bc7",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"comments\": [\n    {\n      \"id\": 1,\n      \"text\": \"AI will definitely make us more productive! Excited to see where this goes 🚀\",\n      \"username\": \"tech_enthusiast_42\"\n    },\n    {\n      \"id\": 2,\n      \"text\": \"I think AI will create new jobs we haven't even imagined yet\",\n      \"username\": \"future_optimist\"\n    },\n    {\n      \"id\": 3,\n      \"text\": \"Already using AI tools at work and they're game changers\",\n      \"username\": \"early_adopter\"\n    },\n    {\n      \"id\": 4,\n      \"text\": \"This technology is going to solve so many problems\",\n      \"username\": \"problem_solver\"\n    },\n    {\n      \"id\": 5,\n      \"text\": \"Honestly this is terrifying for job security 😰\",\n      \"username\": \"worried_worker\"\n    },\n    {\n      \"id\": 6,\n      \"text\": \"AI is already replacing people in my industry\",\n      \"username\": \"affected_employee\"\n    },\n    {\n      \"id\": 7,\n      \"text\": \"Only benefits tech companies, not regular workers\",\n      \"username\": \"skeptical_sam\"\n    },\n    {\n      \"id\": 8,\n      \"text\": \"We're moving too fast without considering the consequences\",\n      \"username\": \"cautious_critic\"\n    },\n    {\n      \"id\": 9,\n      \"text\": \"Depends on the industry I guess\",\n      \"username\": \"neutral_observer\"\n    },\n    {\n      \"id\": 10,\n      \"text\": \"Some jobs yes, others probably not\",\n      \"username\": \"balanced_view\"\n    },\n    {\n      \"id\": 11,\n      \"text\": \"Need better retraining programs either way\",\n      \"username\": \"policy_minded\"\n    },\n    {\n      \"id\": 12,\n      \"text\": \"It's probably 50/50 - some replacement, some augmentation\",\n      \"username\": \"middle_ground\"\n    },\n    {\n      \"id\": 13,\n      \"text\": \"Excited but also worried about the transition period\",\n      \"username\": \"mixed_feelings\"\n    },\n    {\n      \"id\": 14,\n      \"text\": \"Great for boring tasks but hope it doesn't go too far\",\n      \"username\": \"moderate_supporter\"\n    },\n    {\n      \"id\": 15,\n      \"text\": \"Love the efficiency gains but concerned about inequality\",\n      \"username\": \"thoughtful_analyst\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -60,
+        -20
+      ],
+      "id": "c1ae150d-9dfc-4d03-977e-e16bf18a7874",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here are the comments to analyze: {{ $json.comments.map(comment => comment.text) }}",
+        "options": {
+          "systemMessage": "=You are an expert sentiment analysis AI specializing in social media comments. Your task is to analyze comments about AI and workplace automation topics.\n\nAnalyze the provided comments array and provide both individual comment analysis AND an overall summary.\n\n**For each comment, provide:**\n1. **Sentiment Score**: Rate from -1.0 (very negative) to +1.0 (very positive)\n2. **Sentiment Label**: Positive, Negative, Neutral, or Mixed\n3. **Confidence Level**: How certain you are (0-100%)\n4. **Key Emotions**: List specific emotions detected\n5. **Main Themes**: Identify key topics mentioned\n\n**For the overall summary, provide:**\n1. **Overall Sentiment Distribution**: Percentage breakdown of positive/negative/neutral/mixed\n2. **Average Sentiment Score**: Overall score from -1.0 to +1.0\n3. **Dominant Themes**: Most frequently mentioned topics\n4. **Key Insights**: Notable patterns or trends in the responses\n5. **Engagement Quality**: How thoughtful/engaged the responses seem\n\n**Input Format:** You will receive comments in an array\nParse the comments array and analyze each comment in the array.\n\n**Output Format:** Return as JSON with \"individual_analysis\" array and \"summary\" object.\n\nAnalyze the comments about \"Will AI replace people in the workplace?\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -20
+      ],
+      "id": "48ad5d58-8d54-4f93-bd11-048daae9ca1d",
+      "name": "Sentiment Analysis Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        160,
+        220
+      ],
+      "id": "774de0fc-d85f-4a72-b6fe-dc323b34a71b",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "bAulndIAF0R0CshZ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// N8N Code Node - Convert JSON sentiment analysis to HTML\n\n// Get the AI output and parse JSON\nlet aiOutput = $input.first().json.output;\n\n// Remove code blocks if they exist\naiOutput = aiOutput.replace(/^```json\\n?/gm, '').replace(/\\n?```$/gm, '');\n\n// Parse the JSON\nconst data = JSON.parse(aiOutput);\nconst analysis = data.individual_analysis;\nconst summary = data.summary;\n\n// Helper function to get sentiment color\nfunction getSentimentColor(label) {\n  switch(label.toLowerCase()) {\n    case 'positive': return '#27ae60';\n    case 'negative': return '#e74c3c';\n    case 'neutral': return '#95a5a6';\n    case 'mixed': return '#f39c12';\n    default: return '#95a5a6';\n  }\n}\n\n// Helper function to get sentiment background\nfunction getSentimentBg(label) {\n  switch(label.toLowerCase()) {\n    case 'positive': return '#d4edda';\n    case 'negative': return '#f8d7da';\n    case 'neutral': return '#e2e3e5';\n    case 'mixed': return '#fff3cd';\n    default: return '#e2e3e5';\n  }\n}\n\n// Generate HTML\nconst html = `\n<div style=\"font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f8f9fa;\">\n  \n  <!-- Header -->\n  <div style=\"text-align: center; margin-bottom: 30px;\">\n    <h1 style=\"color: #2c3e50; margin: 0; font-size: 28px;\">📊 AI Sentiment Analysis</h1>\n    <p style=\"color: #7f8c8d; margin: 5px 0;\">Results from Instagram Comments</p>\n  </div>\n  \n  <!-- Summary Cards -->\n  <div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;\">\n    \n    <!-- Overall Score Card -->\n    <div style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);\">\n      <div style=\"font-size: 32px; font-weight: bold; margin-bottom: 5px;\">${summary.average_sentiment_score.toFixed(2)}</div>\n      <div style=\"font-size: 14px; opacity: 0.9;\">Average Score</div>\n    </div>\n    \n    <!-- Total Comments Card -->\n    <div style=\"background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #2c3e50; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);\">\n      <div style=\"font-size: 32px; font-weight: bold; margin-bottom: 5px;\">${analysis.length}</div>\n      <div style=\"font-size: 14px; opacity: 0.8;\">Total Comments</div>\n    </div>\n    \n  </div>\n\n  <!-- Sentiment Distribution -->\n  <div style=\"background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);\">\n    <h3 style=\"color: #2c3e50; margin-top: 0; margin-bottom: 20px; font-size: 20px;\">🎯 Sentiment Distribution</h3>\n    \n    <div style=\"margin-bottom: 15px;\">\n      <div style=\"display: flex; height: 30px; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);\">\n        <div style=\"background: #27ae60; width: ${summary.overall_sentiment_distribution.positive}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;\">\n          ${summary.overall_sentiment_distribution.positive} Positive\n        </div>\n        <div style=\"background: #e74c3c; width: ${summary.overall_sentiment_distribution.negative}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;\">\n          ${summary.overall_sentiment_distribution.negative} Negative\n        </div>\n        <div style=\"background: #95a5a6; width: ${summary.overall_sentiment_distribution.neutral}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;\">\n          ${summary.overall_sentiment_distribution.neutral} Neutral\n        </div>\n        <div style=\"background: #f39c12; width: ${summary.overall_sentiment_distribution.mixed}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;\">\n          ${summary.overall_sentiment_distribution.mixed} Mixed\n        </div>\n      </div>\n    </div>\n  </div>\n\n  <!-- Key Insights -->\n  <div style=\"background: #fff3cd; border-left: 5px solid #ffc107; padding: 20px; margin-bottom: 25px; border-radius: 0 8px 8px 0;\">\n    <h3 style=\"color: #856404; margin-top: 0; font-size: 18px;\">💡 Key Insights</h3>\n    <p style=\"color: #856404; line-height: 1.6; margin: 0;\">${summary.key_insights}</p>\n  </div>\n\n  <!-- Dominant Themes -->\n  <div style=\"background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);\">\n    <h3 style=\"color: #2c3e50; margin-top: 0; font-size: 18px;\">🏷️ Dominant Themes</h3>\n    <div style=\"display: flex; flex-wrap: wrap; gap: 8px;\">\n      ${summary.dominant_themes.map(theme => \n        `<span style=\"background: #3498db; color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;\">${theme}</span>`\n      ).join('')}\n    </div>\n  </div>\n\n  <!-- Individual Comments -->\n  <div style=\"background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);\">\n    <h3 style=\"color: #2c3e50; margin-top: 0; margin-bottom: 20px; font-size: 20px;\">💬 Individual Comment Analysis</h3>\n    \n    ${analysis.map(comment => `\n      <div style=\"border-left: 4px solid ${getSentimentColor(comment.sentiment_label)}; background: ${getSentimentBg(comment.sentiment_label)}; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;\">\n        \n        <div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;\">\n          <span style=\"background: ${getSentimentColor(comment.sentiment_label)}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold;\">\n            ${comment.sentiment_label.toUpperCase()} (${comment.sentiment_score > 0 ? '+' : ''}${comment.sentiment_score})\n          </span>\n          <span style=\"font-size: 12px; color: #666; font-weight: bold;\">${comment.confidence_level}% confidence</span>\n        </div>\n        \n        <p style=\"margin: 12px 0; font-style: italic; color: #2c3e50; line-height: 1.4;\">\n          \"${comment.comment}\"\n        </p>\n        \n        <div style=\"font-size: 11px; color: #666; line-height: 1.4;\">\n          <strong>Emotions:</strong> ${comment.key_emotions.join(', ')} | \n          <strong>Themes:</strong> ${comment.main_themes.join(', ')}\n        </div>\n        \n      </div>\n    `).join('')}\n  </div>\n\n  <!-- Footer -->\n  <div style=\"text-align: center; margin-top: 30px; padding: 20px; color: #7f8c8d; font-size: 12px;\">\n    Generated by SlimAgents AI Workflow • ${new Date().toLocaleDateString()}\n  </div>\n\n</div>\n`;\n\n// Return the HTML\n// Add this at the end of your existing code\nconst base64Html = Buffer.from(html).toString('base64');\nreturn [{ \n  json: { \n    html: html,\n    htmlBase64: base64Html\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        -20
+      ],
+      "id": "7e45fe91-5f7c-4ea5-ab54-2ee56b0cad7b",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "command": "=bash -c \"echo '{{ $json.htmlBase64 }}' | base64 -d > sentiment.html && open sentiment.html\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        740,
+        -20
+      ],
+      "id": "37dd84da-1ca8-403f-b864-894da56e6cbe",
+      "name": "Execute Command"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Sentiment Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sentiment Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sentiment Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3e100c8d-3989-4ab7-bbd5-b27219a5cc6b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5ac4ed0a2b95b11354ff2d2c0ea970ae14384b279191ddf60e599acd493f0cf6"
+  },
+  "id": "mAKqX2Y06MVsMtPt",
+  "tags": []
+}
